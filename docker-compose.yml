@@ -1,0 +1,59 @@
+version: '3.7'
+
+services:
+
+  wordpress:
+    image: wordpress:${WORDPRESS_TAG}
+    container_name: ${COMPOSE_PROJECT_NAME}_wordpress
+    restart: unless-stopped
+    networks:
+      - web
+    environment:
+      WORDPRESS_DB_HOST: ${COMPOSE_PROJECT_NAME}_mariadb
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${DB_NAME}
+    volumes:
+      - ./wordpress:/var/www/html
+    labels:
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wordpress.rule=Host(`${PROJECT_BASE_URL}`)
+
+  mariadb:
+    image: wodby/mariadb:${MARIADB_TAG}
+    container_name: ${COMPOSE_PROJECT_NAME}_mariadb
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - web
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes: 
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:${PHPMYADMIN_VERSION}
+    container_name: ${COMPOSE_PROJECT_NAME}_phpmyadmin
+    restart: unless-stopped
+    networks:
+      - web
+    environment: 
+      PMA_HOST: ${COMPOSE_PROJECT_NAME}_mariadb
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
+    labels:
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_phpmyadmin.rule=Host(`${PROJECT_MY_ADMIN_URL}`)
+
+# Replace this with a local folder to store the codebase in there
+volumes:
+  db_data: {}
+
+networks:
+  web:
+    name: ${NETWORK_NAME}
+    external: true
+  default:
+    external: true
+    name: ${NETWORK_NAME}
