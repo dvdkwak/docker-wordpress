@@ -19,7 +19,7 @@ services:
       - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wordpress.rule=Host(`${PROJECT_BASE_URL}`)
 
   mariadb:
-    image: wodby/mariadb:${MARIADB_TAG}
+    image: mariadb:${MARIADB_TAG}
     container_name: ${COMPOSE_PROJECT_NAME}_mariadb
     restart: unless-stopped
     stop_grace_period: 30s
