@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 
 services:
 
@@ -16,7 +16,15 @@ services:
     volumes:
       - ./wordpress:/var/www/html
     labels:
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wordpress.rule=Host(`${PROJECT_BASE_URL}`)
+      - traefik.enable=true
+      # HTTPS
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wp.rule=Host(`${PROJECT_BASE_URL}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wp.entrypoints=websecure
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wp.tls=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wp.tls.certresolver=le
+      # HTTP
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wp-http.rule=Host(`${PROJECT_BASE_URL}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_wp-http.entrypoints=web
 
   mariadb:
     image: mariadb:${MARIADB_TAG}
@@ -33,20 +41,24 @@ services:
     volumes: 
       - db_data:/var/lib/mysql
 
-  phpmyadmin:
-    image: phpmyadmin:${PHPMYADMIN_VERSION}
-    container_name: ${COMPOSE_PROJECT_NAME}_phpmyadmin
-    restart: unless-stopped
-    networks:
-      - web
-    environment: 
-      PMA_HOST: ${COMPOSE_PROJECT_NAME}_mariadb
-      PMA_USER: ${DB_USER}
-      PMA_PASSWORD: ${DB_PASSWORD}
-    labels:
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}_phpmyadmin.rule=Host(`${PROJECT_MY_ADMIN_URL}`)
+  # OPTIONAL: Uncomment for enabling PMA.
+  # phpmyadmin:
+  #   image: phpmyadmin:${PHPMYADMIN_VERSION}
+  #   container_name: ${COMPOSE_PROJECT_NAME}_phpmyadmin
+  #   restart: unless-stopped
+  #   networks:
+  #     - web
+  #   environment: 
+  #     PMA_HOST: ${COMPOSE_PROJECT_NAME}_mariadb
+  #     PMA_USER: ${DB_USER}
+  #     PMA_PASSWORD: ${DB_PASSWORD}
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.routers.${COMPOSE_PROJECT_NAME}_phpmyadmin.rule=Host(`${PROJECT_MY_ADMIN_URL}`)
+    #   - traefik.http.routers.${COMPOSE_PROJECT_NAME}_phpmyadmin.entrypoints=websecure
+    #   - traefik.http.routers.${COMPOSE_PROJECT_NAME}_phpmyadmin.tls=true
+    #   - traefik.http.routers.${COMPOSE_PROJECT_NAME}_phpmyadmin.tls.certresolver=le
 
-# Replace this with a local folder to store the codebase in there
 volumes:
   db_data: {}
 
